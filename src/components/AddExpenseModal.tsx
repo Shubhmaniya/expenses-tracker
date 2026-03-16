@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils"
 interface AddExpenseModalProps {
   isOpen: boolean
   onClose: () => void
+  isIncome?: boolean
 }
 
-export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProps) {
+export default function AddExpenseModal({ isOpen, onClose, isIncome = false }: AddExpenseModalProps) {
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([])
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -25,10 +26,18 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
 
   useEffect(() => {
     if (isOpen) {
-      getCategories().then(setCategories)
+      getCategories().then(cats => {
+        setCategories(cats)
+        if (isIncome) {
+          const incomeCat = cats.find(c => c.name === "Income")
+          if (incomeCat) setFormData(prev => ({ ...prev, categoryId: incomeCat.id }))
+        } else {
+          setFormData(prev => ({ ...prev, categoryId: "" }))
+        }
+      })
       setErrorMsg(null)
     }
-  }, [isOpen])
+  }, [isOpen, isIncome])
 
   if (!isOpen) return null
 
@@ -37,12 +46,28 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
     setLoading(true)
     setErrorMsg(null)
     
+    // Trim & validate
+    const amountVal = formData.amount.trim()
+    const descVal = formData.description.trim() || (isIncome ? "Income" : "General Expense")
+    const catVal = formData.categoryId.trim()
+    const merchVal = formData.merchant.trim() || (isIncome ? "Income Source" : "General Merchant")
+
+    if (!amountVal || isNaN(parseFloat(amountVal))) {
+      setLoading(false)
+      return setErrorMsg("Please enter a valid amount.")
+    }
+
+    if (!catVal) {
+      setLoading(false)
+      return setErrorMsg("Please select a category.")
+    }
+
     const result = await createExpense({
-      amount: parseFloat(formData.amount),
-      description: formData.description,
-      categoryId: formData.categoryId,
+      amount: parseFloat(amountVal),
+      description: descVal,
+      categoryId: catVal,
       date: formData.date,
-      merchant: formData.merchant,
+      merchant: merchVal,
     })
 
     if (result && result.success) {
@@ -68,7 +93,7 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
       />
       <div className="relative w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl animate-in item-in slide-in-bottom">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-bold">Add Transaction</h2>
+          <h2 className="text-xl font-bold">{isIncome ? "Add Income" : "Add Transaction"}</h2>
           <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors cursor-pointer">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -109,23 +134,24 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
             <label className="text-sm font-medium">Category</label>
             <select
               required
-              className="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
+              className="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer disabled:opacity-50"
               value={formData.categoryId}
               onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              disabled={isIncome} // Lock category if it's income
             >
               <option value="">Select a category</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+            {isIncome && <p className="text-xs text-muted-foreground mt-1">Category is locked to Income.</p>}
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Merchant/Description</label>
             <input
-              required
               type="text"
-              placeholder="e.g. Starbucks, Amazon, Rent (or Salary for Income)"
+              placeholder={isIncome ? "e.g. Salary, Freelance, Dividend" : "e.g. Starbucks, Amazon, Rent"}
               className="w-full bg-background border border-border rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-text"
               value={formData.merchant}
               onChange={(e) => setFormData({ ...formData, merchant: e.target.value, description: e.target.value })}
@@ -136,9 +162,9 @@ export default function AddExpenseModal({ isOpen, onClose }: AddExpenseModalProp
             <button
               disabled={loading}
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className={`w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl font-semibold shadow-lg hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${isIncome ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'bg-primary hover:bg-primary/90 shadow-primary/20'}`}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Transaction"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isIncome ? "Save Income" : "Save Transaction")}
             </button>
           </div>
         </form>

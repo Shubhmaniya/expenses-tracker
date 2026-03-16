@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Wallet, TrendingUp } from "lucide-react"
+import { Plus, TrendingUp } from "lucide-react"
 import AddExpenseModal from "./AddExpenseModal"
-import AddBudgetModal from "./AddBudgetModal"
 
 export default function DashboardHeader() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false)
-  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false)
+  const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false)
 
   return (
     <>
@@ -20,11 +19,11 @@ export default function DashboardHeader() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button 
-            onClick={() => setIsBudgetModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-5 py-3 rounded-xl font-semibold shadow-sm hover:bg-secondary/80 hover:scale-[1.02] hover:brightness-105 transition-all active:scale-95 cursor-pointer"
+            onClick={() => setIsIncomeModalOpen(true)}
+            className="flex items-center justify-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 hover:scale-[1.02] hover:brightness-110 transition-all active:scale-95 cursor-pointer"
           >
-            <Wallet className="w-5 h-5 text-indigo-500" />
-            Add Budget
+            <TrendingUp className="w-5 h-5" />
+            Add Income
           </button>
           
           <button 
@@ -42,9 +41,10 @@ export default function DashboardHeader() {
         onClose={() => setIsExpenseModalOpen(false)} 
       />
       
-      <AddBudgetModal
-        isOpen={isBudgetModalOpen}
-        onClose={() => setIsBudgetModalOpen(false)}
+      <AddExpenseModal
+        isOpen={isIncomeModalOpen}
+        onClose={() => setIsIncomeModalOpen(false)}
+        isIncome={true}
       />
     </>
   )
