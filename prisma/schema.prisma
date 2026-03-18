@@ -1,22 +1,18 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String    @unique // Changed from String? to String
-  password      String?   // Moved and kept as String?
-  emailVerified DateTime? // This field was removed in the provided "Code Edit" block, but the instruction was "Add password field". I will keep it as it's not explicitly removed by the instruction.
+  email         String    @unique
+  password      String?
+  emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -31,7 +27,7 @@ model Category {
   name      String
   color     String?  @default("#3B82F6")
   icon      String?
-  userId    String?  // null if predefined/system category, specific userId if custom
+  userId    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -55,7 +51,7 @@ model Expense {
 
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  
+
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -63,7 +59,7 @@ model Expense {
 model Budget {
   id          String   @id @default(cuid())
   amount      Float
-  period      String   @default("MONTHLY") // MONTHLY, WEEKLY
+  period      String   @default("MONTHLY")
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime @default(now())

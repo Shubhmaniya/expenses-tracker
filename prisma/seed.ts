@@ -1,11 +1,7 @@
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const adapter = new PrismaPg(pool as any)
-const prisma = new PrismaClient({ adapter })
-
+const prisma = new PrismaClient()
 
 const categories = [
   { name: 'Food & Dining', color: '#EF4444', icon: 'Utensils' },
@@ -40,6 +36,9 @@ async function main() {
           userId: null,
         },
       })
+      console.log(`Created category: ${category.name}`)
+    } else {
+      console.log(`Skipped (already exists): ${category.name}`)
     }
   }
   console.log('Seeding finished.')
